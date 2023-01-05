@@ -130,6 +130,7 @@ public class Plateau {
                 
             }
         }
+        return(1);
     }
     
     public NoeudArbre creerArbrePrises(Pion p) {
@@ -216,18 +217,18 @@ public class Plateau {
         LinkedList<int[]> prisesArrivee = new LinkedList();
         for (int i = -1; i < 2; i++) {
             for (int j = -1; j < 2; j++) {
-                int[] pos = peutPrendre(a, plateau.get(x).get(y));
-                if (pos != null) {
-                    prisesArrivee.add(pos);
-                }
+//                int[] pos = peutPrendre(a, plateau.get(x).get(y));
+//                if (pos != null) {
+//                    prisesArrivee.add(pos);
+//                }
             }
         }
-        if (!prises.isEmpty()) {
-            Random r = new Random();
-            int i = r.nextInt(prises.size());
-            int[] pos = prises.get(i);
-            prendre(a, plateau.get(pos[0]).get(pos[1]), )
-        }
+//        if (!prises.isEmpty()) {
+//            Random r = new Random();
+//            int i = r.nextInt(prises.size());
+//            int[] pos = prises.get(i);
+//            prendre(a, plateau.get(pos[0]).get(pos[1]), )
+//        }
     }
     
     public void deplacer(Pion p, int x, int y) {
