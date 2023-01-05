@@ -6,9 +6,6 @@ package edu.ecn.new_castelneau_quinot_dames;
 
 import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.Random;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 /**
  *
@@ -19,7 +16,6 @@ public class Plateau {
     public static final int TAILLE_PLATEAU = 10;
     // Plateau de jeu, contenant les pions
     private LinkedList<LinkedList<Pion>> plateau;
-    Logger logger = Logger.getLogger(Plateau.class.getName());
     
     /** Constructeur de Plateau */
     public Plateau() {
@@ -74,71 +70,52 @@ public class Plateau {
         return choix;
     }
     
-    public int[] peutPrendreInitial(Pion a, Pion b) {
-        int aX = a.getPositionX();
-        int aY = a.getPositionY();
-        int bX = b.getPositionX();
-        int bY = b.getPositionY();
-        int difX = bX - aX;
-        int difY = bY - aY;
-        int[] pos = new int[2];
-        if (a.getEstDame() && difX*difX == difY*difY && difX != 0) {
-            boolean trajectoireVide = true;
-            int[] pas = new int[2];
-            if (difX > 0) { pas[0] = 1;  }
-            else          { pas[0] = -1; }
-            if (difY > 0) { pas[1] = 1;  }
-            else          { pas[1] = -1; }
-            for (int i = aX; i < bX; i += pas[0]) {
-                for (int j = aY; j < bY; j += pas[1]) {
-                    if (plateau.get(i).get(j) != null) {
-                        trajectoireVide = false;
-                    }
-                }
-            }
-            if (trajectoireVide) {
-                pos[0] = bX + pas[0];
-                pos[1] = bY + pas[1];
-                return pos;
-            }
-        }
-        else if (difX*difX == 1 && difY*difY == 1
-                && plateau.get(bX + difX).get(bY + difY) == null
-                && a.getEstBlanc() != b.getEstBlanc()) {
-            pos[0] = bX + difX;
-            pos[1] = bY + difY;
-            return pos;
-        }
-        return null;
-    }
+//    public int[] peutPrendreInitial(Pion a, Pion b) {
+//        int aX = a.getPositionX();
+//        int aY = a.getPositionY();
+//        int bX = b.getPositionX();
+//        int bY = b.getPositionY();
+//        int difX = bX - aX;
+//        int difY = bY - aY;
+//        int[] pos = new int[2];
+//        if (a.getEstDame() && difX*difX == difY*difY && difX != 0) {
+//            boolean trajectoireVide = true;
+//            int[] pas = new int[2];
+//            if (difX > 0) { pas[0] = 1;  }
+//            else          { pas[0] = -1; }
+//            if (difY > 0) { pas[1] = 1;  }
+//            else          { pas[1] = -1; }
+//            for (int i = aX; i < bX; i += pas[0]) {
+//                for (int j = aY; j < bY; j += pas[1]) {
+//                    if (plateau.get(i).get(j) != null) {
+//                        trajectoireVide = false;
+//                    }
+//                }
+//            }
+//            if (trajectoireVide) {
+//                pos[0] = bX + pas[0];
+//                pos[1] = bY + pas[1];
+//                return pos;
+//            }
+//        }
+//        else if (difX*difX == 1 && difY*difY == 1
+//                && plateau.get(bX + difX).get(bY + difY) == null
+//                && a.getEstBlanc() != b.getEstBlanc()) {
+//            pos[0] = bX + difX;
+//            pos[1] = bY + difY;
+//            return pos;
+//        }
+//        return null;
+//    }
     
-    /**
-     * Renvoie les coordonnees en lesquels le pion p peut etre pris, s'il peut l'etre
-     */
-    public int peutPrendre(boolean coul, int xCour, int yCour, int xPrec, int yPrec, int iter) {
-        int[] pasXY = new int[2];
-        pasXY[0] = -1;
-        pasXY[1] = 1;
-        for (int pasX : pasXY) {
-            for (int pasY : pasXY) {
-                int xSuiv = xCour + 2*pasX;
-                int ySuiv = yCour + 2*pasY;
-                if (xSuiv != xPrec || ySuiv != yPrec && plateau.get(xSuiv).get(ySuiv) == null
-                        && coul != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
-                    int iterCour = peutPrendre(coul, xSuiv, ySuiv, xCour, yCour, iter + 1);
-                }
-                else {
-                    int iterCour = iter;
-                }
-                
-            }
-        }
-        return(1);
-    }
-    
-    public NoeudArbre creerArbrePrises(Pion p) {
+    public NoeudArbre creerArbre(Pion p) {
         NoeudArbre root = new NoeudArbre(p);
-        elargir(root);
+        if (p.getEstDame()) {
+            elargirDame(root);
+        }
+        else {
+            elargir(root);
+        }
         return root;
     }
     
@@ -193,7 +170,7 @@ public class Plateau {
         for (Pion p : pions) {
             NoeudArbre f = new NoeudArbre(p, root);
             feuilles.add(f);
-            elargir(f);
+            elargirDame(f);
         }
         root.setFeuilles(feuilles);
     }
@@ -206,32 +183,42 @@ public class Plateau {
     
     /**
      * Prend le pion p et deplace le pion en (x, y)
-     * @param a Le pion qui prend
-     * @param b Le pion a prendre (qui peut l'etre)
-     * @param x abscisse d'arrivee
-     * @param y ordonnee d'arrivee
+     * @param p Le pion qui prend
      */
-    public void prendre(Pion a, Pion b, int x, int y) {
-        deplacer(a, x, y);
-        retirer(b);
-        if ((a.getEstBlanc() && y == 0) || (!a.getEstBlanc() && y == 9)) {
-            a.devientDame();
+    public void prendre(Pion p, NoeudArbre root) {
+        ReturnType rt = chercheCible(root);
+        deplacer(p, rt.posFinale[0], rt.posFinale[1]);
+        for (Pion prise : rt.prises) {
+            retirer(prise);
         }
-        LinkedList<int[]> prisesArrivee = new LinkedList();
-        for (int i = -1; i < 2; i++) {
-            for (int j = -1; j < 2; j++) {
-//                int[] pos = peutPrendre(a, plateau.get(x).get(y));
-//                if (pos != null) {
-//                    prisesArrivee.add(pos);
-//                }
+    }
+    
+    public ReturnType chercheCible(NoeudArbre root) {
+        LinkedList<NoeudArbre> feuilles = root.getFeuilles();
+        ReturnType rt = new ReturnType();
+        
+        if (feuilles.isEmpty()) {
+            int x = root.getPion().getPositionX();
+            int y = root.getPion().getPositionY();
+            rt.posFinale[0] = x;
+            rt.posFinale[1] = y;
+            return rt;
+        }
+        
+        int nbPrisesMax = 0;
+        int indexPrisesMax = 0;
+        for (int i = 0; i < feuilles.size(); i++) {
+            ReturnType newRt = chercheCible(feuilles.get(i));
+            if (newRt.nbPrises > nbPrisesMax) {
+                indexPrisesMax = i;
+                nbPrisesMax = newRt.nbPrises;
+                rt.posFinale = newRt.posFinale;
+                rt.prises = newRt.prises;
             }
         }
-//        if (!prises.isEmpty()) {
-//            Random r = new Random();
-//            int i = r.nextInt(prises.size());
-//            int[] pos = prises.get(i);
-//            prendre(a, plateau.get(pos[0]).get(pos[1]), )
-//        }
+        rt.prises.add(feuilles.get(indexPrisesMax).getPion());
+        rt.nbPrises = nbPrisesMax;
+        return rt;
     }
     
     public void deplacer(Pion p, int x, int y) {
@@ -285,8 +272,7 @@ public class Plateau {
             }
             System.out.println();
         }
-        logger.setLevel(Level.FINE);
-        logger.log(Level.INFO, "x");
+        System.out.println("x");
     }
     
     public LinkedList<LinkedList<Pion>> getPlateau() {
