@@ -78,7 +78,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <exec.mainClass>edu.ecn.test_tp.new_CASTELNEAU_QUINOT_dames</exec.mainClass>
+        <exec.mainClass>edu.ecn.new_castelneau_quinot_dames.New_CASTELNEAU_QUINOT_dames</exec.mainClass>
         <sonar.organization>erwanqui</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
