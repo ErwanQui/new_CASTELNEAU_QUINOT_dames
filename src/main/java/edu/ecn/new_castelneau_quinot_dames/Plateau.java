@@ -7,6 +7,8 @@ package edu.ecn.new_castelneau_quinot_dames;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Random;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  *
@@ -17,6 +19,7 @@ public class Plateau {
     public static final int TAILLE_PLATEAU = 10;
     // Plateau de jeu, contenant les pions
     private LinkedList<LinkedList<Pion>> plateau;
+    Logger logger = Logger.getLogger(Plateau.class.getName());
     
     /** Constructeur de Plateau */
     public Plateau() {
@@ -282,7 +285,8 @@ public class Plateau {
             }
             System.out.println();
         }
-        System.out.println("x");
+        logger.setLevel(Level.FINE);
+        logger.log(Level.INFO, "x");
     }
     
     public LinkedList<LinkedList<Pion>> getPlateau() {

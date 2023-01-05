@@ -11,7 +11,16 @@ package edu.ecn.new_castelneau_quinot_dames;
  */
 public class New_CASTELNEAU_QUINOT_dames {
 
+    /**
+     * Le main du projet.
+     * @param args
+     */
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        Plateau plateau = new Plateau();
+        boolean estBlanc = true;
+        while (true) {
+            plateau.tourDeJeu(estBlanc);
+            estBlanc = !estBlanc;            
+        }
     }
 }
