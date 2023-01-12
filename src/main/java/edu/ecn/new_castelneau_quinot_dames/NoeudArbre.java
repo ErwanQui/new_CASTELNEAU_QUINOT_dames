@@ -16,6 +16,8 @@ public class NoeudArbre {
     private NoeudArbre parent;
     /** Les noeuds feuilles de ce noeud. */
     private LinkedList<NoeudArbre> feuilles;
+    /** La prise faite avant d'arriver en ce noeud. */
+    private Pion dernierePrise;
     
     /** Constructeur de NoeudArbre. */
     public NoeudArbre() {
@@ -35,10 +37,12 @@ public class NoeudArbre {
      * Constructeur de NoeudArbre.
      * @param p Le pion correspondant au noeud
      * @param parent Le noeud parent
+     * @param dP La derniere prise
      */
-    public NoeudArbre(Pion p, NoeudArbre parent) {
+    public NoeudArbre(Pion p, NoeudArbre parent, Pion dP) {
         pion = p;
         this.parent = parent;
+        dernierePrise = dP;
     }
     
     /**
@@ -46,11 +50,13 @@ public class NoeudArbre {
      * @param p Le pion correspondant au noeud
      * @param parent Le noeud parent
      * @param feuilles Les noeuds feuilles
+     * @param dP La derniere prise
      */
-    public NoeudArbre(Pion p, NoeudArbre parent, LinkedList<NoeudArbre> feuilles) {
+    public NoeudArbre(Pion p, NoeudArbre parent, LinkedList<NoeudArbre> feuilles, Pion dP) {
         pion = p;
         this.parent = parent;
         this.feuilles = feuilles;
+        dernierePrise = dP;
     }
     
     public Pion getPion() {
@@ -65,6 +71,10 @@ public class NoeudArbre {
         return feuilles;
     }
     
+    public Pion getDernierePrise() {
+        return dernierePrise;
+    }
+    
     public void setPion(Pion p) {
         pion = p;
     }
@@ -75,5 +85,9 @@ public class NoeudArbre {
     
     public void setFeuilles(LinkedList<NoeudArbre> feuilles) {
         this.feuilles = feuilles;
+    }
+    
+    public void setDernierePrise(Pion dP) {
+        dernierePrise = dP;
     }
 }

@@ -106,31 +106,31 @@ public class Plateau {
         int xRoot = pionRoot.getPositionX();
         int yRoot = pionRoot.getPositionY();
         LinkedList<Pion> pions = new LinkedList();
+        LinkedList<Pion> prises = new LinkedList();
         for (int pasX = 1; pasX > -2; pasX -= 2) {
             for (int pasY = 1; pasY > -2; pasY -= 2) {
                 int xSuiv = xRoot + 2*pasX;
                 int ySuiv = yRoot + 2*pasY;
+                int xPrise = xSuiv - pasX;
+                int yPrise = ySuiv - pasY;
                 if ((!aUnParent || xSuiv != xParent || ySuiv != yParent)
                         && xSuiv < 10 && xSuiv > -1 && ySuiv < 10 && ySuiv > -1) {
-                    System.out.println("parent ok");
                     if (plateau.get(xSuiv).get(ySuiv) == null
-                            && plateau.get(xSuiv - pasX).get(ySuiv - pasY) != null) {
-                        System.out.println("prenable ok");
-                        if (coulRoot != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
-                            System.out.println("couleur ok");
+                            && plateau.get(xPrise).get(yPrise) != null) {
+                        if (coulRoot != plateau.get(xPrise).get(yPrise).getEstBlanc()) {
                             pions.add(new Pion(coulRoot, xSuiv, ySuiv));
+                            prises.add(new Pion(!coulRoot, xPrise, yPrise));
                         }
                     }
                 }
             }
         }
         LinkedList<NoeudArbre> feuilles = new LinkedList();
-        for (Pion p : pions) {
-            NoeudArbre f = new NoeudArbre(p, root);
+        for (int i = 0; i < pions.size(); i++) {
+            NoeudArbre f = new NoeudArbre(pions.get(i), root, prises.get(i));
             f = elargir(f);
             feuilles.add(f);
         }
-        System.out.println(feuilles.size());
         root.setFeuilles(feuilles);
         return root;
     }
@@ -156,17 +156,21 @@ public class Plateau {
         int xRoot = pionRoot.getPositionX();
         int yRoot = pionRoot.getPositionY();
         LinkedList<Pion> pions = new LinkedList();
+        LinkedList<Pion> prises = new LinkedList();
         for (int pasX = 1; pasX > -2; pasX -= 2) {
             for (int pasY = 1; pasY > -2; pasY -= 2) {
                 for (int i = 2; i < 9; i++) {
                     int xSuiv = xRoot + i*pasX;
                     int ySuiv = yRoot + i*pasY;
+                    int xPrise = xSuiv - pasX;
+                    int yPrise = ySuiv - pasY;
                     if ((!aUnParent || xSuiv != xParent || ySuiv != yParent)
                         && xSuiv < 10 && xSuiv > -1 && ySuiv < 10 && ySuiv > -1) {
                         if (xSuiv != xParent || ySuiv != yParent && plateau.get(xSuiv).get(ySuiv) == null
-                                && plateau.get(xSuiv - pasX).get(ySuiv - pasY) != null) {
-                            if (coulRoot != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
+                                && plateau.get(xPrise).get(yPrise) != null) {
+                            if (coulRoot != plateau.get(xPrise).get(yPrise).getEstBlanc()) {
                                 pions.add(new Pion(coulRoot, xSuiv, ySuiv));
+                                prises.add(new Pion(!coulRoot, xPrise, yPrise));
                             }
                         }
                     }
@@ -174,8 +178,8 @@ public class Plateau {
             }
         }
         LinkedList<NoeudArbre> feuilles = new LinkedList();
-        for (Pion p : pions) {
-            NoeudArbre f = new NoeudArbre(p, root);
+        for (int i = 0; i < pions.size(); i++) {
+            NoeudArbre f = new NoeudArbre(pions.get(i), root, prises.get(i));
             f = elargirDame(f);
             feuilles.add(f);
         }
@@ -199,7 +203,6 @@ public class Plateau {
      * @param rt Les donnees de l'arbre de recherche de cibles optimal
      */
     public void prendre(Pion p, ReturnType rt) {
-        System.out.println(rt.posFinale[0] + " " + rt.posFinale[1]);
         deplacer(p, rt.posFinale[0], rt.posFinale[1]);
         for (Pion prise : rt.prises) {
             System.out.println("prise :" + prise.getPositionX() + " " + prise.getPositionY());
@@ -221,21 +224,20 @@ public class Plateau {
             int y = root.getPion().getPositionY();
             rt.posFinale[0] = x;
             rt.posFinale[1] = y;
-            System.out.println("feuilles empty");
             return rt;
         }
         
         int indexPrisesMax = 0;
         for (int i = 0; i < feuilles.size(); i++) {
             ReturnType newRt = chercheCible(feuilles.get(i));
-            if (newRt.nbPrises > rt.nbPrises) {
+            if (newRt.nbPrises >= rt.nbPrises) {
                 indexPrisesMax = i;
                 rt.nbPrises = newRt.nbPrises;
                 rt.posFinale = newRt.posFinale;
                 rt.prises = newRt.prises;
             }
         }
-        rt.prises.add(feuilles.get(indexPrisesMax).getPion());
+        rt.prises.add(feuilles.get(indexPrisesMax).getDernierePrise());
         rt.nbPrises += 1;
         return rt;
     }
@@ -249,7 +251,6 @@ public class Plateau {
     public void deplacer(Pion p, int x, int y) {
         retirer(p);
         p.deplacer(x, y);
-        System.out.println("depl : " + p.getPositionX() + " " + p.getPositionY());
         if (x == 9) {
             p.setEstDame(true);
         }
@@ -335,7 +336,6 @@ public class Plateau {
             default:
                 deplX = 0;
                 deplY = 0;
-                System.out.println("default");
                 break;
         }
         int i = 1;
