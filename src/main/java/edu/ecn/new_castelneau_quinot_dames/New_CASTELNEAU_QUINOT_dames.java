@@ -18,9 +18,14 @@ public class New_CASTELNEAU_QUINOT_dames {
     public static void main(String[] args) {
         Plateau plateau = new Plateau();
         boolean estBlanc = true;
-        while (true) {
-            plateau.tourDeJeu(estBlanc);
+        while (plateau.tourDeJeu(estBlanc)) {
             estBlanc = !estBlanc;            
+        }
+        if (estBlanc) {
+            System.out.println("Le joueur noir a gagne !!");
+        }
+        else {
+            System.out.print("Le joueur blanc a gagne !!");
         }
     }
 }

@@ -63,13 +63,6 @@ public class Pion {
     }
     
     /**
-     * Transforme le Pion en dame.
-     */
-    public void devientDame() {
-        this.estDame = true;
-    }
-
-    /**
      * Renvoie si le Pion est blanc.
      * @return isDame 
      */
