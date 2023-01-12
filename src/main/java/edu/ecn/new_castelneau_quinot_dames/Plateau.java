@@ -176,12 +176,12 @@ public class Plateau {
      * @param root Le noeud initial de l'arbre de recherche de cibles
      */
     public void prendre(Pion p, NoeudArbre root) {
-        ReturnType rt = chercheCible(root);
-        if (rt.posFinale[0] != p.getPositionX() || rt.posFinale[1] !=)
-        deplacer(p, rt.posFinale[0], rt.posFinale[1]);
-        for (Pion prise : rt.prises) {
-            retirer(prise);
-        }
+//        ReturnType rt = chercheCible(root);
+//        if (rt.posFinale[0] != p.getPositionX() || rt.posFinale[1] !=)
+//        deplacer(p, rt.posFinale[0], rt.posFinale[1]);
+//        for (Pion prise : rt.prises) {
+//            retirer(prise);
+//        }
     }
     
     /**
@@ -237,7 +237,7 @@ public class Plateau {
      */
     private void jouer(Pion p) {
         NoeudArbre root = creerArbre(p);
-        boolean aPris = prendre(p, root);
+//        boolean aPris = prendre(p, root);
     }
     
     /**
