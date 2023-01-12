@@ -29,7 +29,6 @@ public class Plateau {
                 else {
                     switch ((x + y)%2) {
                         case 0:
-                        case 2:
                             ligne.add(null);
                             break;
                         case 1:
@@ -173,11 +172,9 @@ public class Plateau {
     /**
      * Cherche les pionts que p doit prendre, les prends et deplace p.
      * @param p Le pion qui prend
-     * @param root Le noeud initial de l'arbre de recherche de cibles
+     * @param rt Les donnees de l'arbre de recherche de cibles optimal
      */
-    public void prendre(Pion p, NoeudArbre root) {
-        ReturnType rt = chercheCible(root);
-        if (rt.posFinale[0] != p.getPositionX() || rt.posFinale[1] !=)
+    public void prendre(Pion p, ReturnType rt) {
         deplacer(p, rt.posFinale[0], rt.posFinale[1]);
         for (Pion prise : rt.prises) {
             retirer(prise);
@@ -225,6 +222,9 @@ public class Plateau {
      */
     public void deplacer(Pion p, int x, int y) {
         retirer(p);
+        if (x == 9) {
+            p.setEstDame(true);
+        }
         p.deplacer(x, y);
         LinkedList<Pion> ligne = plateau.get(x);
         ligne.set(y, p);
@@ -234,10 +234,91 @@ public class Plateau {
     /**
      * Permet au joueur dont c'est le tour de jouer le pion p
      * @param p Le pion a jouer
+     * @return True si le pion a pu etre joue, false sinon
      */
-    private void jouer(Pion p) {
-        NoeudArbre root = creerArbre(p);
-        boolean aPris = prendre(p, root);
+    private boolean jouer(Pion p) {
+        Scanner scan = new Scanner(System.in);
+        int[] dirPossible = new int[4];
+        int x = p.getPositionX();
+        int y = p .getPositionY();
+        int dirVert;
+        if (p.getEstBlanc()) {
+            dirVert = 1;
+        }
+        else {
+            dirVert = -1;
+        }
+        if (plateau.get(x + dirVert).get(y + 1) == null) {
+            dirPossible[0] = 1;
+        }
+        if (plateau.get(x + dirVert).get(y - 1) == null) {
+            dirPossible[1] = 1;
+        }
+        if (p.getEstDame() && plateau.get(x - dirVert).get(y + 1) == null) {
+            dirPossible[2] = 1;
+        }
+        if (p.getEstDame() && plateau.get(x - dirVert).get(y - 1) == null) {
+            dirPossible[3] = 1;
+        }
+        if (dirPossible[0] == 0 && dirPossible[1] == 0 && dirPossible[2] == 0 && dirPossible[3] == 0) {
+            System.out.println("Ce pion ne peut pas etre deplace !");
+            return false;
+        }
+        System.out.println("Voulez-vous deplacer le pion :");
+        if (dirPossible[0] == 1) {
+            System.out.println("En avant a droite ? (AD)");
+        }
+        if (dirPossible[1] == 1) {
+            System.out.println("En avant a gauche ? (AG)");
+        }
+        if (dirPossible[0] == 1) {
+            System.out.println("En arriere a droite ? (RD)");
+        }
+        if (dirPossible[1] == 1) {
+            System.out.println("En arriere a gauche ? (RG)");
+        }
+        String dir = scan.next();
+        int deplX;
+        int deplY;
+        switch (dir) {
+            case "AD":
+                deplX = dirVert;
+                deplY = 1;
+                break;
+            case "AG":
+                deplX = dirVert;
+                deplY = -1;
+                break;
+            case "RD":
+                deplX = -dirVert;
+                deplY = 1;
+                break;
+            case "RG":
+                deplX = -dirVert;
+                deplY = -1;
+                break;
+            default:
+                deplX = 0;
+                deplY = 0;
+                break;
+        }
+        int i = 1;
+        if (p.getEstDame()) {
+            boolean deplacementPossible = true;
+            while (deplacementPossible) {
+                i++;
+                deplacementPossible = (plateau.get(x + i * deplX).get(y + deplY * i) == null);
+            }
+            System.out.println("De combien de cases le deplacer ?");
+            int j = Integer.parseInt(scan.next());
+            while (j >= i) {
+                System.out.println("Deplacement impossible. De combien de cases le deplacer ?");
+                j = Integer.parseInt(scan.next());
+            }
+            i = j;
+        }
+        p.deplacer(x + i * deplX, y + i * deplY);
+        return true;
     }
     
     /**
@@ -250,8 +331,58 @@ public class Plateau {
         else { System.out.print("noir :"); }
         
         affichePlateau();
-        Pion p = choixPion(couleur);
-        jouer(p);
+        LinkedList<Pion> pionsJouables = new LinkedList();
+        LinkedList<NoeudArbre> arbres = new LinkedList();
+        for (int x = 0; x < 10; x++) {
+            for (int y = 0; y < 10; y++) {
+                Pion pion = plateau.get(x).get(y);
+                if (pion != null) {
+                    if (pion.getEstBlanc() == couleur) {
+                        pionsJouables.add(pion);
+                        arbres.add(creerArbre(pion));
+                    }
+                }
+            }
+        }
+        if (pionsJouables.isEmpty()) {
+            // DEFAITE
+        }
+        else {
+            LinkedList<ReturnType> bestRts = new LinkedList();
+            bestRts.add(chercheCible(arbres.get(0)));
+            LinkedList<Pion> bestPions = new LinkedList();
+            bestPions.add(pionsJouables.get(0));
+            for (int i = 1; i < arbres.size(); i++) {
+                ReturnType rt = chercheCible(arbres.get(i));
+                if (rt.nbPrises > bestRts.get(0).nbPrises) {
+                    bestRts.clear();
+                    bestRts.add(rt);
+                    bestPions.clear();
+                    bestPions.add(pionsJouables.get(i));
+                }
+                else if (rt.nbPrises == bestRts.get(0).nbPrises) {
+                    bestRts.add(rt);
+                    bestPions.add(pionsJouables.get(i));
+                }
+            }
+            if (bestRts.get(0).nbPrises == 0) {
+                Pion p = choixPion(couleur);
+                while (!jouer(p)) {
+                    p = choixPion(couleur);
+                }
+            }
+            else {
+                Scanner scan = new Scanner(System.in);
+                System.out.println("Choisissez le pion a jouer parmi :");
+                for (int i = 0; i < bestPions.size(); i++) {
+                    System.out.println(i + " : (" + bestPions.get(i).getPositionX() + ", "
+                            + bestPions.get(i).getPositionY() + ")");
+                }
+                int i = Integer.parseInt(scan.next());
+                prendre(bestPions.get(i), bestRts.get(i));
+                System.out.println("Votre pion a pris des pieces !");
+            }
+        }
     }
     
     public void affichePlateau() {
