@@ -70,44 +70,11 @@ public class Plateau {
         return choix;
     }
     
-//    public int[] peutPrendreInitial(Pion a, Pion b) {
-//        int aX = a.getPositionX();
-//        int aY = a.getPositionY();
-//        int bX = b.getPositionX();
-//        int bY = b.getPositionY();
-//        int difX = bX - aX;
-//        int difY = bY - aY;
-//        int[] pos = new int[2];
-//        if (a.getEstDame() && difX*difX == difY*difY && difX != 0) {
-//            boolean trajectoireVide = true;
-//            int[] pas = new int[2];
-//            if (difX > 0) { pas[0] = 1;  }
-//            else          { pas[0] = -1; }
-//            if (difY > 0) { pas[1] = 1;  }
-//            else          { pas[1] = -1; }
-//            for (int i = aX; i < bX; i += pas[0]) {
-//                for (int j = aY; j < bY; j += pas[1]) {
-//                    if (plateau.get(i).get(j) != null) {
-//                        trajectoireVide = false;
-//                    }
-//                }
-//            }
-//            if (trajectoireVide) {
-//                pos[0] = bX + pas[0];
-//                pos[1] = bY + pas[1];
-//                return pos;
-//            }
-//        }
-//        else if (difX*difX == 1 && difY*difY == 1
-//                && plateau.get(bX + difX).get(bY + difY) == null
-//                && a.getEstBlanc() != b.getEstBlanc()) {
-//            pos[0] = bX + difX;
-//            pos[1] = bY + difY;
-//            return pos;
-//        }
-//        return null;
-//    }
-    
+    /**
+     * Initialisation de la recherche du meilleur chemin de prises (crée la root et l'elargi).
+     * @param p Le pion dont on cherche les cibles
+     * @return Le noeud initial de l'arbre des prises possibles
+     */
     public NoeudArbre creerArbre(Pion p) {
         NoeudArbre root = new NoeudArbre(p);
         if (p.getEstDame()) {
@@ -119,6 +86,10 @@ public class Plateau {
         return root;
     }
     
+    /**
+     * Trouve les feuilles possibles d'un arbre de recherche de cibles.
+     * @param root Le noeud actuel.
+     */
     public void elargir(NoeudArbre root) {
         Pion pionRoot = root.getPion();
         boolean coulRoot = pionRoot.getEstBlanc();
@@ -133,8 +104,11 @@ public class Plateau {
                 int xSuiv = xRoot + 2*pasX;
                 int ySuiv = yRoot + 2*pasY;
                 if (xSuiv != xParent || ySuiv != yParent && plateau.get(xSuiv).get(ySuiv) == null
-                        && coulRoot != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
-                    pions.add(plateau.get(xSuiv).get(ySuiv));
+                        && plateau.get(xSuiv - pasX).get(ySuiv - pasY) != null) {
+                    if (coulRoot != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
+                        Pion p = new Pion(coulRoot, xSuiv, ySuiv);
+                        pions.add(p);
+                    }
                 }
             }
         }
@@ -147,6 +121,10 @@ public class Plateau {
         root.setFeuilles(feuilles);
     }
     
+    /**
+     * Trouve les feuilles possibles d'un arbre de recherche de cibles, pour une dame.
+     * @param root Le noeud actuel.
+     */
     public void elargirDame(NoeudArbre root) {
         Pion pionRoot = root.getPion();
         boolean coulRoot = pionRoot.getEstBlanc();
@@ -158,11 +136,18 @@ public class Plateau {
         LinkedList<Pion> pions = new LinkedList();
         for (int pasX = 1; pasX > -2; pasX -= 2) {
             for (int pasY = 1; pasY > -2; pasY -= 2) {
-                int xSuiv = xRoot + 2*pasX;
-                int ySuiv = yRoot + 2*pasY;
-                if (xSuiv != xParent || ySuiv != yParent && plateau.get(xSuiv).get(ySuiv) == null
-                        && coulRoot != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
-                    pions.add(plateau.get(xSuiv).get(ySuiv));
+                for (int i = 2; i < 9; i++) {
+                    int xSuiv = xRoot + i*pasX;
+                    int ySuiv = yRoot + i*pasY;
+                    if (xSuiv < 10 && xSuiv > -1 && ySuiv < 10 && ySuiv > -1) {
+                        if (xSuiv != xParent || ySuiv != yParent && plateau.get(xSuiv).get(ySuiv) == null
+                                && plateau.get(xSuiv - pasX).get(ySuiv - pasY) != null) {
+                            if (coulRoot != plateau.get(xSuiv - pasX).get(ySuiv - pasY).getEstBlanc()) {
+                                Pion p = new Pion(coulRoot, xSuiv, ySuiv);
+                                pions.add(p);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -175,6 +160,10 @@ public class Plateau {
         root.setFeuilles(feuilles);
     }
     
+    /**
+     * Retire un pion p qui a ete pris.
+     * @param p Le pion a retirer
+     */
     public void retirer(Pion p) {
         LinkedList<Pion> ligne = plateau.get(p.getPositionX());
         ligne.set(p.getPositionY(), null);
@@ -182,17 +171,24 @@ public class Plateau {
     }
     
     /**
-     * Prend le pion p et deplace le pion en (x, y)
+     * Cherche les pionts que p doit prendre, les prends et deplace p.
      * @param p Le pion qui prend
+     * @param root Le noeud initial de l'arbre de recherche de cibles
      */
     public void prendre(Pion p, NoeudArbre root) {
         ReturnType rt = chercheCible(root);
+        if (rt.posFinale[0] != p.getPositionX() || rt.posFinale[1] !=)
         deplacer(p, rt.posFinale[0], rt.posFinale[1]);
         for (Pion prise : rt.prises) {
             retirer(prise);
         }
     }
     
+    /**
+     * Cherche le chemin de pions a prendre permettant d'en prendre le plus
+     * @param root le noeud initial de l'arbre de recherche correspondant au pion qui prend
+     * @return la position finale du pion, le nombre de prises et la liste de ces prises
+     */
     public ReturnType chercheCible(NoeudArbre root) {
         LinkedList<NoeudArbre> feuilles = root.getFeuilles();
         ReturnType rt = new ReturnType();
@@ -221,6 +217,12 @@ public class Plateau {
         return rt;
     }
     
+    /**
+     * DEplace le pion p en (x, y).
+     * @param p Le pion a deplacer
+     * @param x
+     * @param y 
+     */
     public void deplacer(Pion p, int x, int y) {
         retirer(p);
         p.deplacer(x, y);
@@ -234,7 +236,8 @@ public class Plateau {
      * @param p Le pion a jouer
      */
     private void jouer(Pion p) {
-        
+        NoeudArbre root = creerArbre(p);
+        boolean aPris = prendre(p, root);
     }
     
     /**
