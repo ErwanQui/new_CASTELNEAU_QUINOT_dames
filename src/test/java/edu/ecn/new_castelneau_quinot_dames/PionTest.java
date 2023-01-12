@@ -59,7 +59,7 @@ public class PionTest {
         System.out.println("devientDame");
         Pion instance = new Pion(false, 0, 0);
         assertFalse(instance.getEstDame());
-        instance.devientDame();
+        instance.setEstDame(true);
         assertTrue(instance.getEstDame());
     }
 
